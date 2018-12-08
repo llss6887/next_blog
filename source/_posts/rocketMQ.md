@@ -21,8 +21,9 @@ RocketMQ是纯java编写，基于通信框架Netty。
 
 它由四部分组成：name servers, brokers, producers 和 consumers。它们中的每一个都可以水平扩展而没有单一的故障点。如下面的截图所示。
 
-![](rmq-basic-arc.png)
 <!--more-->
+![](rmq-basic-arc.png)
+
 ### Producer（生产者）
 生产者将业务应用程序系统生成的消息发送给代理。RocketMQ提供多种发送范例：同步，异步和单向。
 
@@ -393,8 +394,71 @@ while (splitter.hasNext()) {
 }
 ```
 ### 过滤器
+#### 简单过滤
 在大多数情况下，tag是一种简单而有用的设计，用于选择所需的消息。例如：
 ```java
 DefaultMQPushConsumer consumer = new DefaultMQPushConsumer("CID_EXAMPLE");
 consumer.subscribe("TOPIC", "TAGA || TAGB || TAGC");
+```
+#### 高级消息过滤
+![](1.png)
+
+Rocket MQ 执行过滤是在 Broker 端，Broker 所在的机器会启动多个 FilterServer 过滤进程；Consumer 启动后，会向 FilterServer 上传一个过滤的Java类；Consumer 从 FilterServer拉消息，FilterServer将请求转发给Broker，FilterServer从Broker 收到消息后，按照 Consumer上传的Java过滤程序做过滤，过滤完成后返回给Consumer。这种过滤方法可以节省网络流量，但是增加了 Broker 的负担。
+
+简单来说，是以下几点：
+1.Broker 所在的机器会启动多个 FilterServer 过滤进程
+2.Consumer 启动后，会向 FilterServer 上传一个过滤的 Java 类
+3.Consumer 从 FilterServer拉消息，FilterServer将请求转収给Broker，FilterServer 从 Broker 收到消息后，按照Consumer上传的Java过滤程序做过滤，过滤完成后返回给 Consumer。
+
+我们需要在broker-*.properties文件里添加一句话，如下：
+filterServerNums=1 #指明过滤文件个数
+
+filter:
+```java
+/**
+ * 此文件或上传，不允许有中文 包括注释
+ */
+public class MyFilter implements MessageFilter {
+    @Override
+    public boolean match(MessageExt messageExt) {
+        String a = messageExt.getUserProperty("a");
+        return true;
+    }
+}
+```
+produce和consumer:
+```java
+public class FilterSimple {
+    public static void main(String[] args) throws Exception {
+        filterProduce();
+        filterConsumer();
+    }
+
+    private static void filterConsumer() throws Exception {
+        //创建消费者
+        final DefaultMQPushConsumer consumer = new DefaultMQPushConsumer("order_consumer");
+        //第一个参数  为topic的名称，第二个为 标签，取出TagA和TagB
+        consumer.setNamesrvAddr("localhost:7986,localhost:9875");
+        String code = MixAll.file2String("MyFilter.java");
+        consumer.subscribe("order_topic", code);
+
+        consumer.registerMessageListener(new MessageListenerConcurrently() {
+            @Override
+            public ConsumeConcurrentlyStatus consumeMessage(List<MessageExt> list, ConsumeConcurrentlyContext consumeConcurrentlyContext) {
+                return null;
+            }
+        });
+    }
+
+    private static void filterProduce() throws Exception {
+        DefaultMQProducer producer = new DefaultMQProducer("order_produce");
+        producer.setNamesrvAddr("localhost:7986,localhost:9875");
+        producer.start();
+        Message msg = new Message("order_topic","*", "KEY",
+                    ("Hello RocketMQ ").getBytes("UTF-8"));
+        msg.putUserProperty("a", "20");
+        producer.send(msg);
+        producer.shutdown();
+    }
+}
 ```
