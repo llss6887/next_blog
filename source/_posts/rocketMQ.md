@@ -22,7 +22,7 @@ RocketMQ是纯java编写，基于通信框架Netty。
 它由四部分组成：name servers, brokers, producers 和 consumers。它们中的每一个都可以水平扩展而没有单一的故障点。如下面的截图所示。
 
 ![](rmq-basic-arc.png)
-
+<!--more-->
 ### Producer（生产者）
 生产者将业务应用程序系统生成的消息发送给代理。RocketMQ提供多种发送范例：同步，异步和单向。
 
