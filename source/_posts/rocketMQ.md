@@ -232,7 +232,7 @@ private static void orderProduce() throws Exception {
         for (int i = 0; i < 100; i++) {
             //模拟订单ID
             int orderId = i % 10;
-            Message msg = new Message("TopicTestjjj",tags[i % tags.length], "KEY" + i,
+            Message msg = new Message("order_topic",tags[i % tags.length], "KEY" + i,
                     ("Hello RocketMQ " + i).getBytes("UTF-8"));
             SendResult sendResult = producer.send(msg, new MessageQueueSelector() {
                 @Override
