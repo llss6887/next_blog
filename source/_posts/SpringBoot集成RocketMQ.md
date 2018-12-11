@@ -1,7 +1,7 @@
 ---
-title: SpringBoot集成RecoketMQ
+title: SpringBoot集成RocketMQ
 date: 2017-06-18 23:59:47
-urlname: SpringBoot_RecoketMQ
+urlname: SpringBoot_RocketMQ
 tags:
   - RocketMQ
   - SpringBoot
@@ -187,9 +187,9 @@ public class DemoConsumer {
 ### 启动类
 ```java
 @SpringBootApplication
-public class RecoketMQApplication {
+public class RocketMQApplication {
     public static void main(String[] args) {
-        SpringApplication.run(RecoketMQApplication.class, args);
+        SpringApplication.run(RocketMQApplication.class, args);
     }
 }
 ```
@@ -559,3 +559,4 @@ public class RocketApplication {
 ![](12.png)
 
 到此，生产者和消费者都可以发送和接受消息了。
+
